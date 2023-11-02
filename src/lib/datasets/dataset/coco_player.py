@@ -25,7 +25,7 @@ class COCOPlayer(Dataset):
 
         self.data_dir = Path(opt.data_dir)
         self.img_dir = self.data_dir / 'data'
-        self.annot_path = self.data_dir / 'annotations.json'
+        self.annot_path = self.data_dir / 'labels.json'
 
         self.max_objs = 16
         self.class_name = ['__background__', 'person']
