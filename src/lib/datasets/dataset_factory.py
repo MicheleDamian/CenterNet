@@ -8,6 +8,7 @@ from .sample.ctdet import CTDetDataset
 from .sample.multi_pose import MultiPoseDataset
 
 from .dataset.coco import COCO
+from .dataset.coco_player import COCOPlayer
 from .dataset.pascal import PascalVOC
 from .dataset.kitti import KITTI
 from .dataset.coco_hp import COCOHP
@@ -15,6 +16,7 @@ from .dataset.coco_hp import COCOHP
 
 dataset_factory = {
   'coco': COCO,
+  'coco_player': COCOPlayer,
   'pascal': PascalVOC,
   'kitti': KITTI,
   'coco_hp': COCOHP
