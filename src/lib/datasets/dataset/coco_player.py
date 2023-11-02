@@ -56,7 +56,7 @@ class COCOPlayer(Dataset):
         np.random.shuffle(ids)
         ids = ids[:train_split] if split == 'train' else ids[:train_split:]
 
-        self.images = self.images[ids]
+        self.images = [self.images[i] for i in ids]
         self.num_samples = len(self.images)
 
         print(f'Loaded {split} {self.num_samples} samples.')
