@@ -30,7 +30,7 @@ class COCOPlayer(Dataset):
         self.max_objs = 16
         self.class_name = ['__background__', 'person']
         self._valid_ids = [1]
-        self.cat_ids = {v: i for i, v in enumerate(self._valid_ids)}
+        self.cat_ids = {0: 0}
         self.voc_color = [(v // 32 * 64 + 64, (v // 8) % 4 * 64, v % 8 * 32)
                           for v in range(1, self.num_classes + 1)]
 
@@ -54,7 +54,7 @@ class COCOPlayer(Dataset):
         ids = np.arange(len(self.images))
         train_split = int(len(ids) * .8)
         np.random.shuffle(ids)
-        ids = ids[:train_split] if split == 'train' else ids[:train_split:]
+        ids = ids[:train_split] if split == 'train' else ids[train_split:]
 
         self.images = [self.images[i] for i in ids]
         self.num_samples = len(self.images)
