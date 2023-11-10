@@ -71,7 +71,7 @@ class Inference:
 
         hm = torch.where(hm_max == hm, hm, torch.zeros(1).to(self.device)).squeeze()
 
-        cv2.imwrite('hm.jpg', hm)
+        cv2.imwrite('hm.jpg', hm.detach().cpu().unsquueze(-1).numpy())
         print('hm.shape', hm.shape)
 
         score, idx = torch.topk(hm.view(-1), k)
