@@ -1,13 +1,12 @@
 import torch
 
 from torch.nn import functional as F
-from .lib.models.networks.msra_resnet import BasicBlock, PoseResNet
+from lib.models.networks.msra_resnet import BasicBlock, PoseResNet
 
 
 class Inference:
 
-    def __init__(self, mean, std, model_path, device='gpu'):
-
+    def __init__(self, mean, std, model_path, device='cuda'):
         self.mean = mean
         self.std = std
         self.device = device
@@ -30,27 +29,34 @@ class Inference:
 
         height, width = image.shape[:2]
 
-        in_height, in_width = height | 32, width | 32
+        in_height, in_width = (height | 31) + 1, (width | 31) + 1
+
+        image -= self.mean[None]
+        image /= self.std[None]
+
+        image = image.permute(2, 0, 1)
 
         image = image.to(self.device)
 
-        image -= self.mean
-        image /= self.std
+        print('image.shape', image.shape)
 
         pad_h, pad_w = in_height - height, in_width - width
-        padding = (pad_w // 2, pad_w // 2 + pad_w % 2, pad_h // 2, pad_h // 2 + pad_h % 2)
-        image = F.padding(image, padding)
+        padding = (
+            pad_w // 2, pad_w // 2 + pad_w % 2,
+            pad_h // 2, pad_h // 2 + pad_h % 2
+        )
+        image = F.pad(image, padding)
 
-        image = image.transpose(2, 0, 1).unsqueeze(0)
+        print('image.shape', image.shape)
+
+        image = image.unsqueeze(0).type(torch.float32)
 
         print('image.shape', image.shape)
         print('padding', padding)
 
-        output = self.model(image)[-1]
+        output = self.model(image)[0]
 
-        print('output.shape', output.shape)
-
-        hm = F.sigmoid(output['hm'].squeeze())
+        hm = F.sigmoid(output['hm'])
         wh = output['wh'].squeeze()
         reg = output['reg'].squeeze()
 
@@ -58,10 +64,12 @@ class Inference:
         print('wh.shape', wh.shape)
         print('reg.shape', reg.shape)
 
-        hm_max = F.max_pool2d(hm, (3, 3), padding=1)
-        hm = torch.where(hm_max == hm, hm, torch.zeros(1))
+        hm_max = F.max_pool2d(hm, (3, 3), stride=1, padding=1)
 
         print('hm_max.shape', hm_max.shape)
+
+        hm = torch.where(hm_max == hm, hm, torch.zeros(1).to(self.device)).squeeze()
+
         print('hm.shape', hm.shape)
 
         score, idx = torch.topk(hm.view(-1), k)
@@ -74,12 +82,21 @@ class Inference:
         print('reg.shape', reg.shape)
         print('wh.shape', wh.shape)
 
-        xs = (idx % width).floor() + reg[0] - pad_w // 2
-        ys = (idx / width).floor() + reg[1] - pad_h // 2
+        xs = (idx % in_width).floor() + reg[0]
+        ys = (idx / in_width).floor() + reg[1]
 
         print('xs.shape', xs.shape)
 
-        detections = torch.cat([xs - wh[0], ys - wh[1], xs + wh[0], ys + wh[1], score])
+        detections = torch.stack(
+            (xs - wh[0], ys - wh[1], xs + wh[0], ys + wh[1], score),
+            dim=1
+        )
+
+        detections[:4] *= 4
+        detections[0] -= pad_w // 2
+        detections[1] -= pad_h // 2
+        detections[2] -= pad_w // 2
+        detections[3] -= pad_h // 2
 
         print('detections.shape', detections.shape)
 
