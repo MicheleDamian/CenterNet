@@ -1,4 +1,5 @@
 import torch
+import cv2
 
 from torch.nn import functional as F
 from lib.models.networks.msra_resnet import BasicBlock, PoseResNet
@@ -25,7 +26,7 @@ class Inference:
         self.model = model.to(device)
         self.model.eval()
 
-    def run(self, image, k=10):
+    def run(self, image, k=5):
 
         height, width = image.shape[:2]
 
@@ -47,12 +48,12 @@ class Inference:
         )
         image = F.pad(image, padding)
 
+        print('padding', padding)
         print('image.shape', image.shape)
 
         image = image.unsqueeze(0).type(torch.float32)
 
         print('image.shape', image.shape)
-        print('padding', padding)
 
         output = self.model(image)[0]
 
@@ -70,27 +71,32 @@ class Inference:
 
         hm = torch.where(hm_max == hm, hm, torch.zeros(1).to(self.device)).squeeze()
 
+        cv2.imwrite('hm.jpg', hm)
         print('hm.shape', hm.shape)
 
         score, idx = torch.topk(hm.view(-1), k)
 
-        print('score.shape', score.shape)
+        print('score', score)
+        print('idx', idx)
 
         reg = reg.view(2, -1)[:, idx]
         wh = wh.view(2, -1)[:, idx] / 2
 
-        print('reg.shape', reg.shape)
-        print('wh.shape', wh.shape)
+        print('reg', reg)
+        print('wh', wh)
 
-        xs = (idx % in_width).floor() + reg[0]
-        ys = (idx / in_width).floor() + reg[1]
+        xs = (idx % in_width) + reg[0]
+        ys = (idx // in_width) + reg[1]
 
-        print('xs.shape', xs.shape)
+        print('xs', xs)
+        print('ys', ys)
 
         detections = torch.stack(
             (xs - wh[0], ys - wh[1], xs + wh[0], ys + wh[1], score),
             dim=1
         )
+
+        print('detections', detections)
 
         detections[:4] *= 4
         detections[0] -= pad_w // 2
