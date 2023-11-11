@@ -6,7 +6,7 @@ from lib.models.networks.msra_resnet import BasicBlock, PoseResNet
 
 class Inference(Module):
 
-    def __init__(self, mean, std, model_path, downsample=4, num_predictions=5, device='cuda'):
+    def __init__(self, mean, std, model_path, downsample=4, num_predictions=10, device='cuda'):
         super().__init__()
 
         self.mean = mean
