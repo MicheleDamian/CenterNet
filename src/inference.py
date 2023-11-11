@@ -1,109 +1,75 @@
 import torch
-import cv2
 
-from torch.nn import functional as F
+from torch.nn import Module, functional as F
 from lib.models.networks.msra_resnet import BasicBlock, PoseResNet
 
 
-class Inference:
+class Inference(Module):
 
-    def __init__(self, mean, std, model_path, device='cuda'):
+    def __init__(self, mean, std, model_path, downsample=4, num_predictions=5, device='cuda'):
+        super().__init__()
+
         self.mean = mean
         self.std = std
+        self.downsample = downsample
+        self.num_predictions = num_predictions
         self.device = device
 
-        heads = {'hm': 1, 'wh': 2, 'reg': 2}
+        self.model = PoseResNet(
+            BasicBlock,
+            [2, 2, 2, 2],
+            {'hm': 1, 'wh': 2, 'reg': 2},
+            head_conv=64
+        )
+        self.model.init_weights(18, pretrained=True)
 
-        head_conv = 64
+        checkpoint = torch.load(model_path, map_location=torch.device(device))
+        self.model.load_state_dict(checkpoint['state_dict'])
 
-        block_class, layers = BasicBlock, [2, 2, 2, 2]
-        model = PoseResNet(block_class, layers, heads, head_conv=head_conv)
-        model.init_weights(18, pretrained=True)
+    def forward(self, x):
 
-        checkpoint = torch.load(model_path)
-        model.load_state_dict(checkpoint['state_dict'])
+        height, width = x.shape[:2]
 
-        self.model = model.to(device)
-        self.model.eval()
+        height_pad, width_pad = (height | 31) + 1, (width | 31) + 1
+        width_ds = width_pad // self.downsample
 
-    def run(self, image, k=5):
+        x -= self.mean[None]
+        x /= self.std[None]
 
-        height, width = image.shape[:2]
+        x = x.permute(2, 0, 1).type(torch.float32)
 
-        in_height, in_width = (height | 31) + 1, (width | 31) + 1
-
-        image -= self.mean[None]
-        image /= self.std[None]
-
-        image = image.permute(2, 0, 1)
-
-        image = image.to(self.device)
-
-        print('image.shape', image.shape)
-
-        pad_h, pad_w = in_height - height, in_width - width
+        pad_h, pad_w = height_pad - height, width_pad - width
         padding = (
             pad_w // 2, pad_w // 2 + pad_w % 2,
             pad_h // 2, pad_h // 2 + pad_h % 2
         )
-        image = F.pad(image, padding)
+        x = F.pad(x, padding).unsqueeze(0)
 
-        print('padding', padding)
-        print('image.shape', image.shape)
+        output = self.model(x)[0]
 
-        image = image.unsqueeze(0).type(torch.float32)
+        center = F.sigmoid(output['hm'])
+        width_height = output['wh'].squeeze()
+        offset = output['reg'].squeeze()
 
-        print('image.shape', image.shape)
+        center_max = F.max_pool2d(center, (3, 3), stride=1, padding=1)
+        center = torch.where(center_max == center, center, torch.zeros(1).to(self.device)).squeeze()
 
-        output = self.model(image)[0]
+        score, idx = torch.topk(center.view(-1), self.num_predictions)
 
-        hm = F.sigmoid(output['hm'])
-        wh = output['wh'].squeeze()
-        reg = output['reg'].squeeze()
+        offset = offset.view(2, -1)[:, idx]
+        width_height = width_height.view(2, -1)[:, idx] / 2
 
-        print('hm.shape', hm.shape)
-        print('wh.shape', wh.shape)
-        print('reg.shape', reg.shape)
-
-        hm_max = F.max_pool2d(hm, (3, 3), stride=1, padding=1)
-
-        print('hm_max.shape', hm_max.shape)
-
-        hm = torch.where(hm_max == hm, hm, torch.zeros(1).to(self.device)).squeeze()
-
-        cv2.imwrite('hm.jpg', hm.detach().cpu().unsquueze(-1).numpy())
-        print('hm.shape', hm.shape)
-
-        score, idx = torch.topk(hm.view(-1), k)
-
-        print('score', score)
-        print('idx', idx)
-
-        reg = reg.view(2, -1)[:, idx]
-        wh = wh.view(2, -1)[:, idx] / 2
-
-        print('reg', reg)
-        print('wh', wh)
-
-        xs = (idx % in_width) + reg[0]
-        ys = (idx // in_width) + reg[1]
-
-        print('xs', xs)
-        print('ys', ys)
+        xs, ys = (idx % width_ds) + offset[0], (idx // width_ds) + offset[1]
 
         detections = torch.stack(
-            (xs - wh[0], ys - wh[1], xs + wh[0], ys + wh[1], score),
+            (xs - width_height[0], ys - width_height[1], xs + width_height[0], ys + width_height[1], score),
             dim=1
         )
 
-        print('detections', detections)
+        detections[:, :4] *= self.downsample
+        detections[:, 0] -= pad_w // 2
+        detections[:, 1] -= pad_h // 2
+        detections[:, 2] -= pad_w // 2
+        detections[:, 3] -= pad_h // 2
 
-        detections[:4] *= 4
-        detections[0] -= pad_w // 2
-        detections[1] -= pad_h // 2
-        detections[2] -= pad_w // 2
-        detections[3] -= pad_h // 2
-
-        print('detections.shape', detections.shape)
-
-        return detections.detach().cpu().numpy()
+        return detections
