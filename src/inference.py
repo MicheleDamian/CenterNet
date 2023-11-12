@@ -28,10 +28,11 @@ class Inference(Module):
 
     def forward(self, x):
 
+        def pad(d): return (d + self.downsample - 1) // self.downsample * self.downsample
+
         height, width = x.shape[:2]
 
-        height_mul, width_mul = (height + 31) // 32, (width + 31) // 32
-        height_pad, width_pad = height_mul * 32, width_mul * 32
+        height_pad, width_pad = pad(height), pad(width)
         width_ds = width_pad // self.downsample
 
         x -= self.mean[None]
