@@ -30,7 +30,8 @@ class Inference(Module):
 
         height, width = x.shape[:2]
 
-        height_pad, width_pad = (height | 31) + 1, (width | 31) + 1
+        height_mul, width_mul = (height + 31) // 32, (width + 31) // 32
+        height_pad, width_pad = height_mul * 32, width_mul * 32
         width_ds = width_pad // self.downsample
 
         x -= self.mean[None]
