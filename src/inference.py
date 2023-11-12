@@ -28,7 +28,7 @@ class Inference(Module):
 
     def forward(self, x):
 
-        def pad(d): return (d + self.downsample - 1) // self.downsample * self.downsample
+        def pad(d): return (d + 31) // 32 * 32
 
         height, width = x.shape[:2]
 
