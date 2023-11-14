@@ -26,7 +26,7 @@ class Inference(Module):
         checkpoint = torch.load(model_path, map_location=torch.device(device))
         self.model.load_state_dict(checkpoint['state_dict'])
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor):
 
         def pad(d): return (d + 31) // 32 * 32
 
@@ -35,10 +35,10 @@ class Inference(Module):
         height_pad, width_pad = pad(height), pad(width)
         width_ds = width_pad // self.downsample
 
-        x -= self.mean[None]
-        x /= self.std[None]
+        x -= self.mean
+        x /= self.std
 
-        x = x.permute(2, 0, 1).type(torch.float32)
+        x = x.permute(2, 0, 1)
 
         pad_h, pad_w = height_pad - height, width_pad - width
         padding = (
