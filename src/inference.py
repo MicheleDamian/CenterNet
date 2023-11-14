@@ -30,24 +30,21 @@ class Inference(Module):
 
         def pad(d): return (d + 31) // 32 * 32
 
-        height, width = x.shape[:2]
+        height, width = x.shape[1:]
 
         height_pad, width_pad = pad(height), pad(width)
         width_ds = width_pad // self.downsample
 
-        x -= self.mean
-        x /= self.std
-
-        x = x.permute(2, 0, 1)
+        x_norm = ((x.T - self.mean) / self.std).T
 
         pad_h, pad_w = height_pad - height, width_pad - width
         padding = (
             pad_w // 2, pad_w // 2 + pad_w % 2,
             pad_h // 2, pad_h // 2 + pad_h % 2
         )
-        x = F.pad(x, padding).unsqueeze(0)
+        x_pad = F.pad(x_norm, padding).unsqueeze(0)
 
-        output = self.model(x)[0]
+        output = self.model(x_pad)[0]
 
         center = F.sigmoid(output['hm'])
         width_height = output['wh'].squeeze()
