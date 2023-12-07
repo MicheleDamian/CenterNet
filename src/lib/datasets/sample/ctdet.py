@@ -54,6 +54,7 @@ class CTDetDataset(data.Dataset):
         h_border = self._get_border(128, img.shape[0])
         c[0] = np.random.randint(low=w_border, high=img.shape[1] - w_border)
         c[1] = np.random.randint(low=h_border, high=img.shape[0] - h_border)
+
       else:
         sf = self.opt.scale
         cf = self.opt.shift
@@ -64,17 +65,15 @@ class CTDetDataset(data.Dataset):
       if np.random.random() < self.opt.flip:
         flipped = True
         img = img[:, ::-1, :]
-        c[0] =  width - c[0] - 1
-        
+        c[0] = width - c[0] - 1
 
-    trans_input = get_affine_transform(
-      c, s, 0, [input_w, input_h])
-    inp = cv2.warpAffine(img, trans_input, 
-                         (input_w, input_h),
-                         flags=cv2.INTER_LINEAR)
+    trans_input = get_affine_transform(c, s, 0, [input_w, input_h])
+    inp = cv2.warpAffine(img, trans_input, (input_w, input_h), flags=cv2.INTER_LINEAR)
     inp = (inp.astype(np.float32) / 255.)
+
     if self.split == 'train' and not self.opt.no_color_aug:
       color_aug(self._data_rng, inp, self._eig_val, self._eig_vec)
+
     inp = (inp - self.mean) / self.std
     inp = inp.transpose(2, 0, 1)
 
@@ -92,8 +91,7 @@ class CTDetDataset(data.Dataset):
     cat_spec_wh = np.zeros((self.max_objs, num_classes * 2), dtype=np.float32)
     cat_spec_mask = np.zeros((self.max_objs, num_classes * 2), dtype=np.uint8)
     
-    draw_gaussian = draw_msra_gaussian if self.opt.mse_loss else \
-                    draw_umich_gaussian
+    draw_gaussian = draw_msra_gaussian if self.opt.mse_loss else draw_umich_gaussian
 
     gt_det = []
     for k in range(num_objs):
