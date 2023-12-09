@@ -235,9 +235,9 @@ def net_aug(
         img,
         net_length,
         net_width,
-        sigma=0.3,
+        sigma=0.2,
         max_delta=1,
-        iterations=3
+        iterations=2
 ):
 
     h, w, _ = img.shape
