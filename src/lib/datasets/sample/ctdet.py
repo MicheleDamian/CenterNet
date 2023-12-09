@@ -46,7 +46,7 @@ class CTDetDataset(data.Dataset):
       s = max(img.shape[0], img.shape[1]) * 1.0
       input_h, input_w = self.opt.input_h, self.opt.input_w
 
-    if self.split == 'train' and self._data_rng.rand() < self.opt.net_aug:
+    if self.split == 'train' and np.random.rand() < self.opt.net_aug:
       mean_w, mean_h = 0.0, 0.0
       for ann in anns:
         bbox = self._coco_box_to_bbox(ann['bbox'])
@@ -54,7 +54,6 @@ class CTDetDataset(data.Dataset):
         mean_h += (bbox[3] - bbox[1]) / len(anns)
 
       net_aug(
-        self._data_rng,
         img,
         (mean_w, 1.5 * mean_w),
         (0.9 * 0.025 * mean_h, 1.1 * 0.025 * mean_h)

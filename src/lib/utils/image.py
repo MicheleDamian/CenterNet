@@ -231,7 +231,6 @@ def color_aug(data_rng, image, eig_val, eig_vec):
 
 
 def net_aug(
-        rng,
         img,
         net_length,
         net_width,
@@ -244,13 +243,13 @@ def net_aug(
 
     n_lines = max(1, int(h / net_width[1]))
 
-    lines = rng.rand(n_lines, 2)
+    lines = np.random.rand(n_lines, 2)
     lines[:, 0] *= w
     lines[:, 1] *= h
 
     lines = lines.astype(np.int)
-    len_lines = rng.randn(n_lines) * (net_length[1] - net_length[0]) + net_length[0]
-    width_lines = rng.randn(n_lines) * (net_width[1] - net_width[0]) + net_width[0]
+    len_lines = np.random.rand(n_lines) * (net_length[1] - net_length[0]) + net_length[0]
+    width_lines = np.random.rand(n_lines) * (net_width[1] - net_width[0]) + net_width[0]
 
     for (x0, y0), nl, wl in zip(lines, len_lines, width_lines):
 
@@ -269,7 +268,7 @@ def net_aug(
     height_pixels = img.shape[1] - max_delta * 2
     total_pixels = width_pixels * height_pixels
 
-    dxy = rng.randint(-max_delta, max_delta, size=(total_pixels, iterations, 2))
+    dxy = np.random.randint(-max_delta, max_delta, size=(total_pixels, iterations, 2))
 
     for i in range(iterations):
         dy = dxy[:, i, 0]
