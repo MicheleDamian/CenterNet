@@ -230,7 +230,7 @@ def color_aug(data_rng, image, eig_val, eig_vec):
     lighting_(data_rng, image, 0.1, eig_val, eig_vec)
 
 
-def _add_net(
+def net_aug(
     rng,
     img,
     net_length,
