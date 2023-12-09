@@ -258,7 +258,7 @@ def net_aug(
         wl = max(1, int(wl))
         cv2.line(img, (x0, y0), (x1, y0), (255, 255, 255), wl)
 
-    img = cv2.GaussianBlur(img, sigmaX=sigma, ksize=(0, 0))
+    cv2.GaussianBlur(img.copy(), dst=img, sigmaX=sigma, ksize=(0, 0))
 
     hs = np.arange(img.shape[0] - max_delta, max_delta, -1)
     ws = np.arange(img.shape[1] - max_delta, max_delta, -1)
@@ -276,6 +276,4 @@ def net_aug(
         dx = dxy[:, i, 1]
         img[dh, dw], img[dh + dy, dw + dx] = img[dh + dy, dw + dx], img[dh, dw]
 
-    img = cv2.GaussianBlur(img, sigmaX=sigma, ksize=(0, 0))
-
-    return img
+    cv2.GaussianBlur(img.copy(), dst=img, sigmaX=sigma, ksize=(0, 0))
