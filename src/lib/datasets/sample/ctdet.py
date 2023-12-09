@@ -57,10 +57,7 @@ class CTDetDataset(data.Dataset):
         self._data_rng,
         img,
         (mean_w, 1.5 * mean_w),
-        (0.9 * 0.05 * mean_h, 1.1 * 0.05 * mean_h),
-        sigma=3.0,
-        max_delta=5,
-        iterations=5
+        (0.9 * 0.05 * mean_h, 1.1 * 0.05 * mean_h)
       )
 
     # TODO: debug
