@@ -52,7 +52,7 @@ class CTDetDataset(data.Dataset):
         bbox = self._coco_box_to_bbox(ann['bbox'])
         mean_w += (bbox[2] - bbox[0]) / len(anns)
         mean_h += (bbox[3] - bbox[1]) / len(anns)
-      inp = img.copy()
+
       net_aug(
         self._data_rng,
         img,
@@ -60,11 +60,6 @@ class CTDetDataset(data.Dataset):
         (0.9 * 0.025 * mean_h, 1.1 * 0.025 * mean_h)
       )
 
-    # TODO: debug
-    cv2.imwrite('input.jpg', inp)
-    cv2.imwrite('output.jpg', img)
-    exit()
-    
     flipped = False
     if self.split == 'train':
       if not self.opt.not_rand_crop:
