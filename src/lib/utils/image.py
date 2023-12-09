@@ -236,7 +236,7 @@ def net_aug(
         net_length,
         net_width,
         sigma=0.3,
-        max_delta=2,
+        max_delta=1,
         iterations=3
 ):
 
