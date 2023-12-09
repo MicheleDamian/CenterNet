@@ -228,3 +228,51 @@ def color_aug(data_rng, image, eig_val, eig_vec):
     for f in functions:
         f(data_rng, image, gs, gs_mean, 0.4)
     lighting_(data_rng, image, 0.1, eig_val, eig_vec)
+
+
+def _add_net(
+    rng,
+    img,
+    net_length,
+    net_width,
+    sigma,
+    max_delta=1,
+    iterations=1,
+    p_lines=0.1
+):
+
+    w, h = img.shape
+    n_lines = int(h * w * p_lines)
+
+    lines = rng.rand((n_lines, 2))
+    lines[:, 0] *= w
+    lines[:, 1] *= h
+
+    lines = lines.astype(np.int)
+    len_lines = rng.randn(n_lines) * (net_length[1] - net_length[0]) + net_length[0]
+    width_lines = rng.randn(n_lines) * (net_width[1] - net_width[0]) + net_width[0]
+
+    for (x0, y0), nl, wl in zip(lines, len_lines, width_lines):
+
+        x1 = x0 + nl
+        y1 = y0
+
+        cv2.line(img, (x0, y0), (x1, y1), (255, 255, 255), wl)
+
+    img = cv2.GaussianBlur(img, sigmaX=sigma, ksize=(0, 0))
+
+    hs = np.arange(img.shape[0] - max_delta, max_delta, -1)
+    ws = np.arange(img.shape[1] - max_delta, max_delta, -1)
+    h = np.tile(hs, ws.shape[0])
+    w = np.repeat(ws, hs.shape[0])
+
+    dxy = rng.randint(-max_delta, max_delta, size=(w * h, iterations, 2))
+
+    for i in range(iterations):
+        dy = dxy[:, i, 0]
+        dx = dxy[:, i, 1]
+        img[h, w], img[h + dy, w + dx] = img[h + dy, w + dx], img[h, w]
+
+    img = cv2.GaussianBlur(img, sigmaX=sigma, ksize=(0, 0))
+
+    return img

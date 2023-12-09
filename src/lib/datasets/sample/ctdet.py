@@ -8,7 +8,7 @@ import torch
 import json
 import cv2
 import os
-from utils.image import flip, color_aug
+from utils.image import flip, color_aug, net_aug
 from utils.image import get_affine_transform, affine_transform
 from utils.image import gaussian_radius, draw_umich_gaussian, draw_msra_gaussian
 from utils.image import draw_dense_reg
@@ -45,6 +45,20 @@ class CTDetDataset(data.Dataset):
     else:
       s = max(img.shape[0], img.shape[1]) * 1.0
       input_h, input_w = self.opt.input_h, self.opt.input_w
+
+    if self.split == 'train' and self.opt.net_aug:
+      mean_w, mean_h = 0.0, 0.0
+      for ann in anns:
+        bbox = self._coco_box_to_bbox(ann['bbox'])
+        mean_w += (bbox[2] - bbox[0]) / len(anns)
+        mean_h += (bbox[3] - bbox[1]) / len(anns)
+      inp = img.copy()
+      net_aug(self._data_rng, img, 1.5 * mean_w, mean_h, 0.1)
+
+    # TODO: debug
+    cv2.imwrite('input.jpg', inp)
+    cv2.imwrite('output.jpg', img)
+    exit()
     
     flipped = False
     if self.split == 'train':
