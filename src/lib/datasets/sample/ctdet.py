@@ -53,7 +53,7 @@ class CTDetDataset(data.Dataset):
         mean_w += (bbox[2] - bbox[0]) / len(anns)
         mean_h += (bbox[3] - bbox[1]) / len(anns)
       inp = img.copy()
-      net_aug(self._data_rng, img, 1.5 * mean_w, mean_h, 0.1)
+      net_aug(self._data_rng, img, (mean_w, 1.5 * mean_w), (0.8 * mean_h, 1.2 * mean_h), 0.1)
 
     # TODO: debug
     cv2.imwrite('input.jpg', inp)

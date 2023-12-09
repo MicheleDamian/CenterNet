@@ -241,10 +241,10 @@ def net_aug(
     p_lines=0.1
 ):
 
-    w, h = img.shape
+    h, w, _ = img.shape
     n_lines = int(h * w * p_lines)
 
-    lines = rng.rand((n_lines, 2))
+    lines = rng.rand(n_lines, 2)
     lines[:, 0] *= w
     lines[:, 1] *= h
 
