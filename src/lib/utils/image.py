@@ -254,10 +254,10 @@ def net_aug(
 
     for (x0, y0), nl, wl in zip(lines, len_lines, width_lines):
 
-        x1 = x0 + nl
-        y1 = y0
+        x1 = int(x0 + nl)
+        wl = max(1, int(wl))
 
-        cv2.line(img, (x0, y0), (x1, y1), (255, 255, 255), wl)
+        cv2.line(img, (x0, y0), (x1, y0), (255, 255, 255), wl)
 
     img = cv2.GaussianBlur(img, sigmaX=sigma, ksize=(0, 0))
 
