@@ -231,18 +231,18 @@ def color_aug(data_rng, image, eig_val, eig_vec):
 
 
 def net_aug(
-    rng,
-    img,
-    net_length,
-    net_width,
-    sigma,
-    max_delta=1,
-    iterations=1,
-    p_lines=0.1
+        rng,
+        img,
+        net_length,
+        net_width,
+        sigma,
+        max_delta=1,
+        iterations=1
 ):
 
     h, w, _ = img.shape
-    n_lines = int(h * w * p_lines)
+
+    n_lines = max(1, int(h / net_width[1]))
 
     lines = rng.rand(n_lines, 2)
     lines[:, 0] *= w
@@ -256,7 +256,6 @@ def net_aug(
 
         x1 = int(x0 + nl)
         wl = max(1, int(wl))
-
         cv2.line(img, (x0, y0), (x1, y0), (255, 255, 255), wl)
 
     img = cv2.GaussianBlur(img, sigmaX=sigma, ksize=(0, 0))
