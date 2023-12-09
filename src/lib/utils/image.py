@@ -232,6 +232,7 @@ def color_aug(data_rng, image, eig_val, eig_vec):
 
 def net_aug(
         img,
+        n_lines,
         net_length,
         net_width,
         sigma=0.2,
@@ -240,8 +241,6 @@ def net_aug(
 ):
 
     h, w, _ = img.shape
-
-    n_lines = max(1, int(h / net_width[1]))
 
     lines = np.random.rand(n_lines, 2)
     lines[:, 0] *= w
