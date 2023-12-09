@@ -135,7 +135,7 @@ class opts(object):
     self.parser.add_argument('--no_color_aug', action='store_true',
                              help='not use the color augmenation '
                                   'from CornerNet')
-    self.parser.add_argument('--net_aug', type=float, default=0.5,
+    self.parser.add_argument('--net_aug', type=float, default=0.0,
                              help='probability of applying net augmentation')
 
     # multi_pose
