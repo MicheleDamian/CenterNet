@@ -54,9 +54,9 @@ class CTDetDataset(data.Dataset):
         mean_h += (bbox[3] - bbox[1]) / len(anns)
 
       line_num = input_h * input_w // int(mean_w * mean_h)
-      line_l, line_w = (mean_w, 1.5 * mean_w), (0.9 * 0.025 * mean_h, 1.1 * 0.025 * mean_h)
-      sigma = 0.2 if mean_h * 4 > height else 0.1
-      iterations = 2 if mean_h * 4 > height else 1
+      line_l, line_w = (mean_w, 2. * mean_w), (0.8 * 0.025 * mean_h, 1.2 * 0.025 * mean_h)
+      sigma = mean_h / height / 2
+      iterations = int(8 * mean_h / height)
 
       net_aug(
         img,
