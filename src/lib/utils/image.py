@@ -243,7 +243,7 @@ def net_aug(
     h, w, _ = img.shape
 
     lines = np.random.rand(n_lines, 2)
-    lines[:, 0] *= w
+    lines[:, 0] *= w - net_length[1]
     lines[:, 1] *= h
 
     lines = lines.astype(np.int)
