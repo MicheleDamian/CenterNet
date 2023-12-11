@@ -137,6 +137,8 @@ class opts(object):
                                   'from CornerNet')
     self.parser.add_argument('--net_aug', type=float, default=0.0,
                              help='probability of applying net augmentation')
+    self.parser.add_argument('--net_thickness', type=float, default=0.075,
+                             help='net thickness as ratio of bbox height')
 
     # multi_pose
     self.parser.add_argument('--aug_rot', type=float, default=0, 
