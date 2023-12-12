@@ -8,7 +8,7 @@ import torch
 import json
 import cv2
 import os
-from utils.image import flip, color_aug, net_aug
+from utils.image import flip, color_aug, net_aug_pixelate
 from utils.image import get_affine_transform, affine_transform
 from utils.image import gaussian_radius, draw_umich_gaussian, draw_msra_gaussian
 from utils.image import draw_dense_reg
@@ -57,15 +57,16 @@ class CTDetDataset(data.Dataset):
       line_l = (1.5 * mean_w, 3. * mean_w)
       line_w = (0.8 * self.opt.net_thickness * mean_h, 1.2 * self.opt.net_thickness * mean_h)
       sigma = mean_h / height
-      iterations = max(0, int(math.log2(16 * mean_h / height)))
+      scales = (32 / mean_h, 96 / mean_h)
+      # iterations = max(0, int(math.log2(16 * mean_h / height)))
 
-      net_aug(
+      net_aug_pixelate(
         img,
         line_num,
         line_l,
         line_w,
-        sigma=sigma,
-        iterations=iterations
+        scales,
+        sigma=sigma
       )
 
     flipped = False

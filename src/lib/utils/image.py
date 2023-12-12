@@ -275,3 +275,39 @@ def net_aug(
         img[dh, dw], img[dh + dy, dw + dx] = img[dh + dy, dw + dx], img[dh, dw]
 
     cv2.GaussianBlur(img.copy(), dst=img, sigmaX=sigma, ksize=(0, 0))
+
+
+def net_aug_pixelate(
+        img,
+        n_lines,
+        net_length,
+        net_width,
+        scales,
+        sigma=0.2,
+        interpolation=cv2.INTER_AREA
+):
+
+    scale = np.random.rand() * (scales[1] - scales[0]) + scales[0]
+
+    cv2.GaussianBlur(img.copy(), dst=img, sigmaX=sigma, ksize=(0, 0))
+
+    h, w, _ = img.shape
+
+    cv2.resize(img.copy(), None, dst=img, fx=scale, fy=scale, interpolation=interpolation)
+    cv2.resize(img.copy(), (w, h), dst=img, interpolation=interpolation)
+
+    lines = np.random.rand(n_lines, 2)
+    lines[:, 0] *= w - net_length[1]
+    lines[:, 1] *= h
+
+    lines = lines.astype(np.int)
+    len_lines = np.random.rand(n_lines) * (net_length[1] - net_length[0]) + net_length[0]
+    width_lines = np.random.rand(n_lines) * (net_width[1] - net_width[0]) + net_width[0]
+
+    for (x0, y0), nl, wl in zip(lines, len_lines, width_lines):
+
+        x1 = int(x0 + nl)
+        wl = max(1, int(wl))
+        cv2.line(img, (x0, y0), (x1, y0), (255, 255, 255), wl)
+
+    cv2.GaussianBlur(img.copy(), dst=img, sigmaX=sigma, ksize=(0, 0))
