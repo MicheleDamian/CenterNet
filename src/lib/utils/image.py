@@ -284,7 +284,7 @@ def net_aug_pixelate(
         net_width,
         scales,
         sigma=0.2,
-        interpolation=cv2.INTER_AREA
+        interpolation=cv2.INTER_NEAREST
 ):
 
     scale = np.random.rand() * (scales[1] - scales[0]) + scales[0]
