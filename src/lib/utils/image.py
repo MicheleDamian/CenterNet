@@ -282,8 +282,8 @@ def net_aug_pixelate(
         n_lines,
         net_length,
         net_width,
+        net_value,
         scales,
-        line_v,
         sigma=0.2,
         interpolation=cv2.INTER_NEAREST
 ):
@@ -292,20 +292,21 @@ def net_aug_pixelate(
 
     h, w, _ = img.shape
 
-    lines = np.random.rand(n_lines, 3)
+    lines = np.random.rand(n_lines, 2)
     lines[:, 0] *= w - net_length[1]
     lines[:, 1] *= h
-    lines[:, 2] = lines[:, 2] * (1 - line_v) + line_v
+
+    val_lines = 255 * (np.random.rand(n_lines) * (1 - net_value) + net_value)
 
     lines = lines.astype(np.int)
     len_lines = np.random.rand(n_lines) * (net_length[1] - net_length[0]) + net_length[0]
     width_lines = np.random.rand(n_lines) * (net_width[1] - net_width[0]) + net_width[0]
 
-    for (x0, y0, v), nl, wl, vl in zip(lines, len_lines, width_lines):
+    for (x0, y0), nl, wl, vl in zip(lines, len_lines, width_lines, val_lines):
 
         x1 = int(x0 + nl)
         wl = max(1, int(wl))
-        vl = int(255 * v)
+        vl = int(vl)
 
         cv2.line(img, (x0, y0), (x1, y0), (vl, vl, vl), wl)
 
