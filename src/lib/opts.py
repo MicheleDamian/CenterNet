@@ -139,6 +139,8 @@ class opts(object):
                              help='probability of applying net augmentation')
     self.parser.add_argument('--net_thickness', type=float, default=0.075,
                              help='net thickness as ratio of bbox height')
+    self.parser.add_argument('--net_min_value', type=float, default=0.5,
+                             help='net minimum value (darkness)')
 
     # multi_pose
     self.parser.add_argument('--aug_rot', type=float, default=0, 
