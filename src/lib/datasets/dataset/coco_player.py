@@ -34,7 +34,7 @@ class COCOPlayer(Dataset):
         self.voc_color = [(v // 32 * 64 + 64, (v // 8) % 4 * 64, v % 8 * 32)
                           for v in range(1, self.num_classes + 1)]
 
-        self._data_rng = np.random.RandomState(123)
+        self._data_rng = np.random.RandomState(seed=123)
         self._eig_val = np.array([0.2141788, 0.01817699, 0.00341571],
                                  dtype=np.float32)
         self._eig_vec = np.array(
@@ -52,9 +52,9 @@ class COCOPlayer(Dataset):
         self.images = self.coco.getImgIds()
 
         ids = np.arange(len(self.images))
-        train_split = int(len(ids) * .8)
-        np.random.shuffle(ids)
-        ids = ids[:train_split] if split == 'train' else ids[train_split:]
+        valid_split = min(100, int(len(ids) * .1))
+        self._data_rng.shuffle(ids)
+        ids = ids[:-valid_split] if split == 'train' else ids[-valid_split:]
 
         self.images = [self.images[i] for i in ids]
         self.num_samples = len(self.images)
